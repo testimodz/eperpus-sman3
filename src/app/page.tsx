@@ -1,69 +1,104 @@
-import Image from "next/image";
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+import Link from 'next/link';
 
 export default function Home() {
+  const router = useRouter();
+  const [formData, setFormData] = useState({ username: '', password: '' });
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(formData)
+    });
+
+    const data = await res.json();
+    setIsLoading(false);
+
+    if (res.ok) {
+      alert(`Selamat datang, ${data.user.namaLengkap}!`);
+      
+      // Simpan data user ke browser supaya ingat siapa yang login
+      localStorage.setItem('user', JSON.stringify(data.user));
+      
+      if (data.user.role === 'admin') {
+        router.push('/dashboard/admin');
+      } else {
+        router.push('/dashboard/siswa'); 
+      }
+    } else {
+      alert(data.message);
+    }
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
+    <div 
+      className="min-h-screen flex flex-col items-center justify-center bg-cover bg-center bg-no-repeat relative"
+      style={{ backgroundImage: "url('/sekolah.jpg')" }} // Pastikan ada sekolah.jpg di folder public/
+    >
+      <div className="absolute inset-0 bg-[#0a192f]/70 mix-blend-multiply"></div>
+
+      <div className="relative z-10 flex flex-col items-center w-full max-w-md px-4">
+        <div className="flex flex-col items-center mb-8 text-center">
+          <div className="w-20 h-24 relative mb-4">
+            {/* Pastikan ada logo.png di folder public/ */}
+            <Image src="/logo.png" alt="Logo SMAN 3 Ciamis" fill className="object-contain" />
+          </div>
+          <p className="text-white text-lg tracking-wide mb-1">Selamat Datang di</p>
+          <h1 className="text-white text-4xl md:text-5xl font-extrabold tracking-wider mb-2">
+            PERPUSTAKAAN
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+          <h2 className="text-[#00d2ff] text-xl md:text-2xl font-bold tracking-widest">
+            SMA NEGERI 3 CIAMIS
+          </h2>
+        </div>
+
+        <div className="bg-[#112240]/80 backdrop-blur-md p-8 rounded-2xl shadow-2xl w-full border border-gray-700">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+            <div>
+              <label className="text-gray-300 text-sm mb-1 block">NIS / Username</label>
+              <input
+                type="text"
+                className="w-full bg-[#0a192f] border border-gray-600 text-white p-3 rounded-lg focus:outline-none focus:border-[#00d2ff] focus:ring-1 focus:ring-[#00d2ff]"
+                value={formData.username}
+                onChange={(e) => setFormData({...formData, username: e.target.value})}
+                required
+              />
+            </div>
+            
+            <div>
+              <label className="text-gray-300 text-sm mb-1 block">Password</label>
+              <input
+                type="password"
+                className="w-full bg-[#0a192f] border border-gray-600 text-white p-3 rounded-lg focus:outline-none focus:border-[#00d2ff] focus:ring-1 focus:ring-[#00d2ff]"
+                value={formData.password}
+                onChange={(e) => setFormData({...formData, password: e.target.value})}
+                required
+              />
+            </div>
+
+            <button 
+              type="submit" 
+              disabled={isLoading}
+              className="w-full bg-[#00d2ff] text-[#0a192f] font-bold py-3 mt-4 rounded-full hover:bg-[#00b8e6] transition-colors disabled:opacity-50"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+              {isLoading ? 'MEMPROSES...' : 'LOGIN'}
+            </button>
+          </form>
+
+          <p className="text-center text-gray-400 text-sm mt-6">
+            Belum punya akun? <Link href="/register" className="text-[#00d2ff] hover:underline">Daftar di sini</Link>
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+      </div>
     </div>
   );
 }
